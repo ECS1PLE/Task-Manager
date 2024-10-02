@@ -1,7 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
 import boardReducer from "./boardReducer";
 
-// Функция для загрузки состояния из localStorage
 const loadState = () => {
   try {
     const serializedState = localStorage.getItem("state");
