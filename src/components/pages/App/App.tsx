@@ -1,7 +1,9 @@
-import React from "react";
-import { useState } from "react";
+import React, { useState } from "react";
 import "./App.scss";
 import Item from "../../Item/Item";
+import { useSelector, useDispatch } from "react-redux";
+import { addTask, moveTask } from "../../../services/reducers/boardReducer";
+import { RootState } from "../../../services/reducers/store";
 
 interface ItemType {
   id: number;
@@ -15,51 +17,22 @@ interface BoardType {
 }
 
 function App() {
-  const [boards, setBoards] = useState<BoardType[]>([
-    {
-      id: 1,
-      title: "В планах",
-      items: [
-        { id: 1, title: "Поесть" },
-        { id: 2, title: "Прогуляться" },
-        { id: 3, title: "Сделать таск менеджер" },
-      ],
-    },
-    {
-      id: 2,
-      title: "В процессе",
-      items: [
-        { id: 4, title: "Вернуться" },
-        { id: 5, title: "Поспать" },
-        { id: 6, title: "Проснутсья" },
-      ],
-    },
-    {
-      id: 3,
-      title: "Сделано",
-      items: [
-        { id: 7, title: "Уснуть" },
-        { id: 8, title: "Почистить зубы" },
-        { id: 9, title: "Разложить кровать" },
-      ],
-    },
-  ]);
+  const dispatch = useDispatch();
 
-  const [currentBoard, setCurrentBoard] = useState<BoardType | null>(null);
-  const [currentItem, setCurrentItem] = useState<ItemType | null>(null);
-  const [count, setCount] = useState<number>(10);
+  const { boards } = useSelector((state: RootState) => state.boards);
+
   const [newTaskTitle, setNewTaskTitle] = useState<string>("");
   const [selectedBoardId, setSelectedBoardId] = useState<number | null>(null);
+  const [draggedItem, setDraggedItem] = useState<ItemType | null>(null);
+  const [currentBoard, setCurrentBoard] = useState<BoardType | null>(null);
 
-  const dragOverHandler = (e: React.DragEvent<HTMLDivElement>) => {
+  const addTaskHandler = (e: React.FormEvent) => {
     e.preventDefault();
-    if (e.currentTarget.className === "item") {
-      e.currentTarget.style.boxShadow = "4px 4px 4px white";
+    if (newTaskTitle.trim() === "" || selectedBoardId === null) {
+      return;
     }
-  };
-
-  const dragLeaveHandler = (e: React.DragEvent<HTMLDivElement>) => {
-    e.currentTarget.style.boxShadow = "none";
+    dispatch(addTask({ boardId: selectedBoardId, title: newTaskTitle }));
+    setNewTaskTitle("");
   };
 
   const dragStartHandler = (
@@ -67,65 +40,43 @@ function App() {
     board: BoardType,
     item: ItemType
   ) => {
+    setDraggedItem(item);
     setCurrentBoard(board);
-    setCurrentItem(item);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", "");
   };
 
-  const dragEndHandler = (e: React.DragEvent<HTMLDivElement>) => {
-    e.currentTarget.style.boxShadow = "none";
+  const dragOverHandler = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
   };
 
   const dropHandler = (
     e: React.DragEvent<HTMLDivElement>,
-    board: BoardType
+    targetBoard: BoardType
   ) => {
     e.preventDefault();
-    if (!currentBoard || currentBoard.id === board.id) {
-      return;
+    if (currentBoard && draggedItem && currentBoard.id !== targetBoard.id) {
+      dispatch(
+        moveTask({
+          sourceBoardId: currentBoard.id,
+          targetBoardId: targetBoard.id,
+          itemId: draggedItem.id,
+        })
+      );
+      setDraggedItem(null);
+      setCurrentBoard(null);
     }
-
-    const currentIndex = currentBoard.items.indexOf(currentItem!);
-    if (currentIndex !== -1) {
-      currentBoard.items.splice(currentIndex, 1);
-    }
-
-    const newItem: ItemType = { ...currentItem!, id: count + 1 };
-    setCount(count + 1);
-
-    board.items.push(newItem);
-    setBoards([...boards]);
   };
 
-  const addTask = (e: React.FormEvent) => {
+  const dragLeaveHandler = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    if (newTaskTitle.trim() === "" || selectedBoardId === null) {
-      return;
-    }
-
-    const newTask: ItemType = {
-      id: count + 1,
-      title: newTaskTitle,
-    };
-    setCount(count + 1);
-
-    const updatedBoards = boards.map((board) => {
-      if (board.id === selectedBoardId) {
-        return {
-          ...board,
-          items: [...board.items, newTask],
-        };
-      }
-      return board;
-    });
-
-    setBoards(updatedBoards);
-    setNewTaskTitle("");
   };
 
   return (
     <div className="app">
       <form
-        onSubmit={addTask}
+        onSubmit={addTaskHandler}
         style={{ marginBottom: "20px" }}
         className="form__add__task"
       >
@@ -179,7 +130,7 @@ function App() {
                   onDragOver={dragOverHandler}
                   onDragLeave={dragLeaveHandler}
                   onDragStart={(e) => dragStartHandler(e, board, item)}
-                  onDragEnd={dragEndHandler}
+                  onDragEnd={() => setDraggedItem(null)}
                   onDrop={(e) => dropHandler(e, board)}
                 >
                   {item.title}
