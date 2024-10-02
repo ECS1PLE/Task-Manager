@@ -74,73 +74,78 @@ function App() {
   };
 
   return (
-    <div className="app">
-      <form
-        onSubmit={addTaskHandler}
-        style={{ marginBottom: "20px" }}
-        className="form__add__task"
-      >
-        <input
-          type="text"
-          value={newTaskTitle}
-          onChange={(e) => setNewTaskTitle(e.target.value)}
-          placeholder="Название задачи"
-          className="write__task"
-        />
-        <select
-          onChange={(e) => setSelectedBoardId(Number(e.target.value))}
-          defaultValue=""
-          className="change__type"
-        >
-          <option value="" disabled>
-            Выберите доску
-          </option>
-          {boards.map((board) => (
-            <option key={board.id} value={board.id}>
-              {board.title}
-            </option>
-          ))}
-        </select>
-        <button type="submit">Добавить задачу</button>
-      </form>
-      <div className="all__boards">
-        {boards.map((board) => (
-          <div className="board" key={board.id}>
-            <div className="board__title">{board.title}</div>
-            {board.items.length === 0 ? (
-              <div
-                className="item empty"
-                onDragOver={dragOverHandler}
-                onDrop={(e) => dropHandler(e, board)}
-                style={{
-                  height: "40px",
-                  border: "2px dashed gray",
-                  textAlign: "center",
-                  lineHeight: "40px",
-                  color: "white",
-                }}
-              >
-                Перетащите задачу сюда
+    <>
+      <div className="NavBar"></div>
+      <div className="parent">
+        <div className="app">
+          <form
+            onSubmit={addTaskHandler}
+            style={{ marginBottom: "20px" }}
+            className="form__add__task"
+          >
+            <input
+              type="text"
+              value={newTaskTitle}
+              onChange={(e) => setNewTaskTitle(e.target.value)}
+              placeholder="Название задачи"
+              className="write__task"
+            />
+            <select
+              onChange={(e) => setSelectedBoardId(Number(e.target.value))}
+              defaultValue=""
+              className="change__type"
+            >
+              <option value="" disabled>
+                Выберите доску
+              </option>
+              {boards.map((board) => (
+                <option key={board.id} value={board.id}>
+                  {board.title}
+                </option>
+              ))}
+            </select>
+            <button type="submit">Добавить задачу</button>
+          </form>
+          <div className="all__boards">
+            {boards.map((board) => (
+              <div className="board" key={board.id}>
+                <div className="board__title">{board.title}</div>
+                {board.items.length === 0 ? (
+                  <div
+                    className="item empty"
+                    onDragOver={dragOverHandler}
+                    onDrop={(e) => dropHandler(e, board)}
+                    style={{
+                      height: "40px",
+                      border: "2px dashed gray",
+                      textAlign: "center",
+                      lineHeight: "40px",
+                      color: "white",
+                    }}
+                  >
+                    Перетащите задачу сюда
+                  </div>
+                ) : (
+                  board.items.map((item) => (
+                    <Item
+                      key={item.id}
+                      title={item.title}
+                      onDragOver={dragOverHandler}
+                      onDragLeave={dragLeaveHandler}
+                      onDragStart={(e) => dragStartHandler(e, board, item)}
+                      onDragEnd={() => setDraggedItem(null)}
+                      onDrop={(e) => dropHandler(e, board)}
+                    >
+                      {item.title}
+                    </Item>
+                  ))
+                )}
               </div>
-            ) : (
-              board.items.map((item) => (
-                <Item
-                  key={item.id}
-                  title={item.title}
-                  onDragOver={dragOverHandler}
-                  onDragLeave={dragLeaveHandler}
-                  onDragStart={(e) => dragStartHandler(e, board, item)}
-                  onDragEnd={() => setDraggedItem(null)}
-                  onDrop={(e) => dropHandler(e, board)}
-                >
-                  {item.title}
-                </Item>
-              ))
-            )}
+            ))}
           </div>
-        ))}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
