@@ -8,6 +8,7 @@ interface ItemProps {
   onDragOver?: (event: React.DragEvent<HTMLDivElement>) => void;
   onDragLeave?: (event: React.DragEvent<HTMLDivElement>) => void;
   onDrop?: (event: React.DragEvent<HTMLDivElement>) => void;
+  onClick?: () => void;
 }
 
 const Item: React.FC<ItemProps> = ({
@@ -17,6 +18,7 @@ const Item: React.FC<ItemProps> = ({
   onDragOver,
   onDragLeave,
   onDrop,
+  onClick,
 }) => {
   return (
     <div
@@ -27,6 +29,7 @@ const Item: React.FC<ItemProps> = ({
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       onDrop={onDrop}
+      onClick={onClick}
     >
       {title}
     </div>

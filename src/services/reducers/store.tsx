@@ -13,11 +13,13 @@ const loadState = () => {
   }
 };
 
-const saveState = (state) => {
+const saveState = (state: any) => {
   try {
     const serializedState = JSON.stringify(state);
     localStorage.setItem("state", serializedState);
-  } catch (err) {}
+  } catch (err) {
+    throw new Error(err);
+  }
 };
 
 const preloadedState = loadState();
@@ -28,10 +30,10 @@ const store = configureStore({
   },
   preloadedState,
 });
+
 store.subscribe(() => {
   saveState(store.getState());
 });
 
 export type RootState = ReturnType<typeof store.getState>;
-
 export default store;

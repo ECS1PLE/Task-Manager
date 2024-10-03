@@ -3,7 +3,8 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 interface ItemType {
   id: number;
-  title: string;
+  title: string; // Это поле будет хранить текст заметки
+  content?: string; // Это новое поле для текста заметки
 }
 
 interface BoardType {
@@ -23,27 +24,35 @@ const initialState: BoardsState = {
       id: 1,
       title: "В планах",
       items: [
-        { id: 1, title: "Поесть" },
-        { id: 2, title: "Прогуляться" },
-        { id: 3, title: "Сделать таск менеджер" },
+        { id: 1, title: "Поесть", content: "Планирую поехать в кафе" },
+        { id: 2, title: "Прогуляться", content: "Прогулка по парку" },
+        {
+          id: 3,
+          title: "Сделать таск менеджер",
+          content: "Создать приложение",
+        },
       ],
     },
     {
       id: 2,
       title: "В процессе",
       items: [
-        { id: 4, title: "Вернуться" },
-        { id: 5, title: "Поспать" },
-        { id: 6, title: "Проснутсья" },
+        { id: 4, title: "Вернуться", content: "Вернуться домой" },
+        { id: 5, title: "Поспать", content: "Час до сна" },
+        { id: 6, title: "Проснутсья", content: "Встать рано" },
       ],
     },
     {
       id: 3,
       title: "Сделано",
       items: [
-        { id: 7, title: "Уснуть" },
-        { id: 8, title: "Почистить зубы" },
-        { id: 9, title: "Разложить кровать" },
+        { id: 7, title: "Уснуть", content: "Лечь спать" },
+        {
+          id: 8,
+          title: "Почистить зубы",
+          content: "Пользоваться зубной нитью",
+        },
+        { id: 9, title: "Разложить кровать", content: "Прибрать постель" },
       ],
     },
   ],
@@ -56,10 +65,14 @@ const boardsSlice = createSlice({
   reducers: {
     addTask: (
       state,
-      action: PayloadAction<{ boardId: number; title: string }>
+      action: PayloadAction<{
+        boardId: number;
+        title: string;
+        content?: string;
+      }>
     ) => {
-      const { boardId, title } = action.payload;
-      const newTask = { id: state.count + 1, title };
+      const { boardId, title, content } = action.payload;
+      const newTask = { id: state.count + 1, title, content };
       state.count += 1;
 
       const board = state.boards.find((board) => board.id === boardId);
@@ -94,8 +107,43 @@ const boardsSlice = createSlice({
         }
       }
     },
+    updateTask: (
+      state,
+      action: PayloadAction<{
+        boardId: number;
+        itemId: number;
+        title: string;
+        content?: string;
+      }>
+    ) => {
+      const { boardId, itemId, title, content } = action.payload;
+      const board = state.boards.find((board) => board.id === boardId);
+      if (board) {
+        const item = board.items.find((item) => item.id === itemId);
+        if (item) {
+          item.title = title;
+          item.content = content;
+        }
+      }
+    },
+    removeTask: (
+      state,
+      action: PayloadAction<{
+        boardId: number;
+        itemId: number;
+      }>
+    ) => {
+      const { boardId, itemId } = action.payload;
+      const board = state.boards.find((board) => board.id === boardId);
+      if (board) {
+        console.log("Before removal:", board.items);
+        board.items = board.items.filter((item) => item.id !== itemId);
+        console.log("After removal:", board.items);
+      }
+    },
   },
 });
 
-export const { addTask, moveTask } = boardsSlice.actions;
+export const { addTask, moveTask, updateTask, removeTask } =
+  boardsSlice.actions;
 export default boardsSlice.reducer;

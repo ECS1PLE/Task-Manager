@@ -1,8 +1,14 @@
 import React, { useState } from "react";
 import "./App.scss";
 import Item from "../../Item/Item";
+import Modal from "../../Modal/Modal";
 import { useSelector, useDispatch } from "react-redux";
-import { addTask, moveTask } from "../../../services/reducers/boardReducer";
+import {
+  addTask,
+  moveTask,
+  updateTask,
+  removeTask,
+} from "../../../services/reducers/boardReducer";
 import { RootState } from "../../../services/reducers/store";
 
 interface ItemType {
@@ -18,13 +24,14 @@ interface BoardType {
 
 function App() {
   const dispatch = useDispatch();
-
   const { boards } = useSelector((state: RootState) => state.boards);
 
-  const [newTaskTitle, setNewTaskTitle] = useState<string>("");
+  const [newTaskTitle, setNewTaskTitle] = useState("");
   const [selectedBoardId, setSelectedBoardId] = useState<number | null>(null);
   const [draggedItem, setDraggedItem] = useState<ItemType | null>(null);
   const [currentBoard, setCurrentBoard] = useState<BoardType | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [currentItemId, setCurrentItemId] = useState<number | null>(null);
 
   const addTaskHandler = (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,6 +40,34 @@ function App() {
     }
     dispatch(addTask({ boardId: selectedBoardId, title: newTaskTitle }));
     setNewTaskTitle("");
+  };
+
+  const openModal = (itemId: number, boardId: number) => {
+    setCurrentItemId(itemId);
+    setSelectedBoardId(boardId);
+    setModalOpen(true);
+    console.log("CLICK");
+    console.log("ОБРАБОТАН");
+    console.log("Состояние modalOpen:", modalOpen);
+  };
+
+  const closeModal = () => {
+    setModalOpen(false);
+    setCurrentItemId(null);
+  };
+
+  const updateTaskHandler = (title: string) => {
+    if (currentItemId !== null) {
+      dispatch(updateTask({ id: currentItemId, title }));
+      closeModal();
+    }
+  };
+
+  const deleteTaskHandler = () => {
+    if (currentItemId !== null && selectedBoardId !== null) {
+      dispatch(removeTask({ itemId: currentItemId, boardId: selectedBoardId }));
+      closeModal();
+    }
   };
 
   const dragStartHandler = (
@@ -78,11 +113,7 @@ function App() {
       <div className="NavBar"></div>
       <div className="parent">
         <div className="app">
-          <form
-            onSubmit={addTaskHandler}
-            style={{ marginBottom: "20px" }}
-            className="form__add__task"
-          >
+          <form onSubmit={addTaskHandler} className="form__add__task">
             <input
               type="text"
               value={newTaskTitle}
@@ -135,9 +166,8 @@ function App() {
                       onDragStart={(e) => dragStartHandler(e, board, item)}
                       onDragEnd={() => setDraggedItem(null)}
                       onDrop={(e) => dropHandler(e, board)}
-                    >
-                      {item.title}
-                    </Item>
+                      onClick={() => openModal(item.id, board.id)}
+                    />
                   ))
                 )}
               </div>
@@ -145,6 +175,22 @@ function App() {
           </div>
         </div>
       </div>
+
+      <Modal
+        isOpen={modalOpen}
+        onClose={closeModal}
+        itemId={currentItemId!}
+        boardId={selectedBoardId!}
+        onDelete={deleteTaskHandler}
+        onUpdate={updateTaskHandler}
+        itemTitle={
+          currentItemId !== null
+            ? boards
+                .flatMap((board) => board.items)
+                .find((item) => item.id === currentItemId)?.title || ""
+            : ""
+        }
+      />
     </>
   );
 }
